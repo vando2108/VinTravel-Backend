@@ -11,7 +11,7 @@ type User struct {
   ID int64 `json:"id"`
   Uuid string `json:"uuid"`
   Name string `json:"name"` //is display name
-  User_email string `json:"user_name"`
+  Username string `json:"username"`
   Password string `json:"password"`
   CreatedAt time.Time `json:"created_at"`
 }

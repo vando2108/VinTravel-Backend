@@ -1,13 +1,11 @@
 package main
 
 import (
-	// "github.com/julienschmidt/httprouter"
-	// "net/http"
-	"VinTravel/driver"
-	"VinTravel/models"
-	// repo "VinTravel/repository/repoimpl"
+	"VinTravel/routes"
+	"net/http"
 	"fmt"
-	// "time"
+	"encoding/json"
+	"github.com/gorilla/mux"
 )
 
 const (
@@ -18,18 +16,27 @@ const (
   dbname = "postgres"
 )
 
+type register_data struct {
+  Username string `json:"username"`
+  User_email string `json:"user_email"`
+  Password string `json:"password"`
+  Name string `json:"name"`
+}
+
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+  fmt.Fprintf(w, "heelo")
+}
+
+func test_post(w http.ResponseWriter, r *http.Request) {
+  var test register_data 
+  json.NewDecoder(r.Body).Decode(&test) 
+  fmt.Println(test)
+}
+
 func main() {
-  db := driver.Connect(host, port, user, password, dbname)
-  err := db.SQL.Ping()
+  router := mux.NewRouter().StrictSlash(true)
+  router.HandleFunc("/auth/register", routes.Regsiter).Methods("POST")
+  router.HandleFunc("/auth/login", routes.Login).Methods("POST")
 
-  fmt.Println("Connect succesfull")
-
-  if err != nil {
-    panic(err)
-  }
-
-  pass, _ := models.Hash("Kd09112108")
-  pass = models.Sanitize(pass)
-
-  fmt.Println(models.CheckPasswordHash(pass, "Kd09112108"))
+  http.ListenAndServe(":8000", router)
 }

@@ -19,15 +19,15 @@ func NewUserRepo(db *sql.DB) repo.UserRepo {
 
 func (u *UserRepoImpl) Insert(user models.User) (error) {
   insertStament := `
-    INSERT INTO users (id, uuid, name, user_email, password, created_at)
+    INSERT INTO users (id, uuid, name, username, password, created_at)
     VALUES ($1, $2, $3, $4, $5, $6)
   `
 
   _, err := u.Db.Exec(insertStament, 
-  user.ID, user.Uuid, user.Name, user.User_email, user.Password, user.CreatedAt)
+  user.ID, user.Uuid, user.Name, user.Username, user.Password, user.CreatedAt)
 
   if err != nil {
-    panic(err)
+    return err
   }
 
   fmt.Println("Add Succesfull: ", user)
@@ -35,13 +35,35 @@ func (u *UserRepoImpl) Insert(user models.User) (error) {
   return nil
 }
 
-func (u *UserRepoImpl) UserExists(db *sql.DB, username string) (bool, error) {
-  err := db.QueryRow("SELECT * FROM users WHERE username=?", username).Scan(&username)
+func (u *UserRepoImpl) NumberOfUsers() (int64, error) {
+  sqlStmt := `
+    SELECT COUNT(*) FROM users
+  `
+  rows, err := u.Db.Query(sqlStmt)
   if err != nil {
-    if err != sql.ErrNoRows {
-      return false, err
-    }
-    return false, nil
+    return 0, err
   }
-  return true, nil
+  var ret int64
+  for rows.Next() {
+    if err := rows.Scan(&ret); err != nil {
+      return 0, nil
+    }
+  }
+
+  return ret, err
+}
+
+func (u *UserRepoImpl) GetHashedPassword(username string) (string, error) {
+  sqlStmt := " SELECT password FROM users WHERE username='" + username +"'"
+  result, err := u.Db.Query(sqlStmt)
+  if err != nil {
+    return "", err
+  }
+  var password string
+  for result.Next() {
+    if err := result.Scan(&password); err != nil {
+      return "", nil
+    }
+  }
+  return password, err
 }
